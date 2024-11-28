@@ -1,0 +1,48 @@
+TO-DO
+
+[x] Incrementar o método detalhes_produto()
+     B1_DESC = Descricao  
+     B1_TIPO = Tipo        
+     B1_DATREF = DT Referenc.
+     B1_LOCPAD = Armazem Pad.
+     B1_MRP = Entra no Mrp?            
+     B1_RASTRO = Rastreabilidade Produto  
+     B1_UM = Unidade de Medida    
+     B1_CONV = Fator de Conversao de UM
+     B1_TIPCONV = Tipo de Conversao da UM (M=Multiplicador;D=Divisor)
+     B1_SEGUM = Segunda Unidade de Medida
+     B1_UREV = Data da Ultima Revisao
+
+
+[x] Adicionar uma chave 'ra' no JSON do GET
+- Deve trazer um TEXTO com o ra
+- Deve ser a primeira posição do JSON
+
+
+[x] Adicione uma condição SE para o campo B1_MRP para retornar no JSON do GET 
+- igual a 'S' deve retornar a chave MRP com o valor calcular
+- igual a 'N' deve retornar o valor 'ignorar'
+
+
+[x] Adicione uma condição SE para o campo B1_RASTRO para retornar no JSON do GET
+- igual a 'S' deve retornar o valor 'ativada'
+- igual a 'N' deve retornar o valor 'desativada'
+ 
+
+[X] Adicionar uma chave denominada 'valor2UM' no JSON do GET
+- deve conter o resultado da formula : valor2UM = {100} {B1_TIPCONV} {B1_CONV}
+         Se B1_TIPCONV for 'M': valor2UM = 100 * {valor do B1_CONV}
+         Se B1_TIPCONV for 'D': valor2UM = 100 / {valor do B1_CONV}
+
+
+[X] Adicionar uma chave denominada 'conversao100' no JSON do GET
+- deve trazer um texto indicando que a quantidade de 100 na unidade de medida 1 corresponde a quantidade X na unidade de medida 2
+
+
+[X] Adicionar uma chave denominada 'ultimarevisao' no JSON do GET
+- deve trazer um texto indicando que a última revisão foi realizada em determinada data
+- data por extenso : 21 de novembro de 2024
+
+
+
+
