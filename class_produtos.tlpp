@@ -1,0 +1,134 @@
+#include 'totvs.ch'
+#include 'tlpp-core.th'
+
+/*/{Protheus.doc} Produtos
+    Classe para uso como API listagem de produtos.
+/*/
+  
+Class TAB_PRODUTOS
+    public method new() constructor
+    
+    @get(endpoint='/fatec/produto',description='Metodo exemplo para listagem de Produtos')
+    //@get('/fatec/produto')
+    public method listar() as logical
+
+    @get(endpoint='/fatec/produto/:codigo',;
+         description='Método para trazer as informações de um produto')
+    //@get('/fatec/produto/:codigo')
+    public method detalhes_produto() as logical
+
+End Class
+
+//Método New
+Method new() Class TAB_PRODUTOS ;Return self
+
+//Método
+method listar() Class TAB_PRODUTOS
+    Local lRPC          as logical
+    Local cErrorStack   as character
+    Local cErrorDescr   as character
+    Local err           as object
+    Local jResp         as json
+    Local jProduto      as json
+
+    If Type('cEmpAnt') <> 'C'
+        RpcSetEnv('99','01')
+        lRPC            := .T.
+    EndIf
+
+    try
+        dbSelectArea("SB1")
+        // SELECT * FROM SIX990 WHERE INDICE = 'SB1'
+        dbSetOrder(1) //B1_FILIAL+B1_COD
+        dbGoTop()
+
+        jResp           := jsonObject():new()
+        jResp['SB1']    := array(0)
+
+        While .not. EoF()
+
+            jProduto                  := jsonObject():new()
+            jProduto['codigo'       ] := SB1->B1_COD
+            jProduto['nome'         ] := AllTrim(B1_DESC)
+            jProduto['tipo'         ] := B1_TIPO
+            jProduto['data_registro'] := DToC(B1_DATREF)
+
+            AAdd(jResp['SB1'],jProduto)
+
+            DbSkip()
+
+        EndDo
+
+        oRest:setResponse(jResp:toJson())
+
+    catch err
+
+        cErrorStack     := err:errorstack
+        cErrorDescr     := err:description
+
+    endtry   
+
+    If lRPC
+        RpcClearEnv()
+    EndIf     
+
+Return .T.
+
+//Método
+Method detalhes_produto() Class TAB_PRODUTOS
+    Local lRPC      as logical
+    Local jPathParm as json
+    Local jResp     as json
+    Local cCodigo   as character
+    Local aCampos   as array
+    Local x         as integer
+
+    If Type('cEmpAnt') <> 'C'
+        RpcSetEnv('99','01')
+        lRPC := .T.
+    EndIf 
+
+    jPathParm := oRest:getPathParamsRequest()
+    jResp     := jsonObject():new()
+
+    cCodigo   := jPathParm['codigo']
+
+    DbSelectArea("SB1")
+    DbSetOrder(1)
+    MsSeek(FWxFilial(Alias())+cCodigo)
+
+    If .not. Found()
+        
+        jResp['erro']   := 'Produto nao encontrado!!'
+        
+        oRest:setStatusCode(400)
+        oRest:setResponse(jResp:toJson())
+
+        Return .T.
+        
+    EndIf
+
+    aCampos := FWSx3Util():getAllFields(Alias(),.F.)
+
+    try
+
+        For x := 1 To Len(aCampos)
+            jResp[aCampos[x]] := &(aCampos[x])
+        Next 
+
+    catch err
+        
+        jResp['erro'] := err:errorstack
+                                   
+        oRest:setFault(jResp:toJson())
+        Return .T.
+
+    endtry
+
+    oRest:setResponse(jResp:toJson())
+
+    If lRPC
+        RpcClearEnv()
+    EndIf
+
+Return .T.

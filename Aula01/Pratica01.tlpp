@@ -1,0 +1,77 @@
+/*
+- Receber os dados da pessoaU_EXEMPLO0 OK
+- Armazenar os dados OK
+- Processar dados e caucular o IMC OK
+- Armazenar o resultado OK
+- Exibir o resultado OK
+	- Exibir os dados digitados
+	- Exibir o IMC
+*/
+
+#include "totvs.ch"
+#include "tlpp-core.th"
+
+Function U_PRATICA01(param_name)
+    Local lRet :=.F. as logical
+    Local aDados:={} as array
+    Local Mensagem as character
+    Local IMC as numeric
+    
+   // aDados := {'Nome', 'Idade', 'Sexo','Altura', 'Peso'}
+
+    AAdd(aDados, FWInputBox("Nome", "Nome"))
+    AAdd(aDados, FWInputBox("Idade", "Idade"))
+    AAdd(aDados, FWInputBox("Sex", "Sexo"))
+    AAdd(aDados, FWInputBox("Altura", "Altura"))
+    AAdd(aDados, GetDtoVal(FWInputBox("Peso", "Peso")))
+    
+    Mensagem := "Confira se as informações inseridas estão corretas"+CRLF
+    Mensagem += "Nome... :"+aDados[1] +CRLF
+    Mensagem += "Idade.. :"+aDados[2] +CRLF
+    Mensagem += "Sexo... :"+aDados[3] +CRLF
+    Mensagem += "Altura. :"+aDados[4] +CRLF
+    Mensagem += "Peso... :"+cValtoChar(aDados[5])
+
+    if FWAlertYesNo(Mensagem,"Confirmar Informações")
+        IMC := aDados[5] / (GetDtoVal(aDados[4]) * GetDtoVal(aDados[4]))
+        FWAlertSuccess("Resultado: Seu IMC é de "+cValtoChar(Round(IMC,2))+"KG/M2.")
+        IMCResultado(IMC)
+    else
+        FWAlertWarning("Dados não informados!! Tente Novamente")
+    endif
+
+    
+   
+Return lRet
+
+Static Function IMCResultado(IMC)
+    Local TabelaIMC := {} as array
+    Local Mensagem as character
+ 
+    Mensagem := "De acordo com a Organização Mundial da Saúde, seu IMC indica que você está com "
+ 
+    AAdd(TabelaIMC, {0   ,18.5, "Baixo Peso"})
+    AAdd(TabelaIMC, {18.5,24.9, "Peso normal"})
+    AAdd(TabelaIMC, {25  ,29.9, "Sobrepeso"})
+    AAdd(TabelaIMC, {30  ,34.9, "Obesidade grau I"})
+    AAdd(TabelaIMC, {35  ,39.9, "Obesidade grau II"})
+    AAdd(TabelaIMC, {40  ,9999, "Obesidade grau III"})
+ 
+    Do Case
+        Case IMC >= TabelaIMC[1][1] .and. IMC <= TabelaIMC[1][2]
+            FWAlertInfo(Mensagem + TabelaIMC[1][3], "Resultado - IMC")
+        Case IMC >= TabelaIMC[2][1] .and. IMC <= TabelaIMC[2][2]
+            FWAlertInfo(Mensagem + TabelaIMC[2][3], "Resultado - IMC")
+        Case IMC >= TabelaIMC[3][1] .and. IMC <= TabelaIMC[3][2]
+            FWAlertInfo(Mensagem + TabelaIMC[3][3], "Resultado - IMC")
+        Case IMC >= TabelaIMC[4][1] .and. IMC <= TabelaIMC[4][2]
+            FWAlertInfo(Mensagem + TabelaIMC[4][3], "Resultado - IMC")
+        Case IMC >= TabelaIMC[5][1] .and. IMC <= TabelaIMC[5][2]
+            FWAlertInfo(Mensagem + TabelaIMC[5][3], "Resultado - IMC")
+        Case IMC >= TabelaIMC[6][1] .and. IMC <= TabelaIMC[6][2]
+            FWAlertInfo(Mensagem + TabelaIMC[6][3], "Resultado - IMC")
+        OTHERWISE
+            FWAlertInfo("Resultado não encontrado", "Resultado - IMC")
+    EndCase
+ 
+Return

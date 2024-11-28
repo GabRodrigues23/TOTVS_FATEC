@@ -1,0 +1,120 @@
+#include 'totvs.ch'
+#include 'tlpp-core.th'
+
+/*/{Protheus.doc} Clientes
+    Classe para uso no projeto.
+/*/
+  
+Class TAB_CLIENTES from fwAdapterBaseV2
+    public method new() constructor
+    
+    @get(endpoint='/clientes/listar',;
+         description='Metodo listagem de todos os clientes')
+    public method listar_clientes() as logical
+
+    @get(endpoint='/clientes/lista_cliente',;
+         description='Método para trazer as informações de um cliente')
+    public method lista_cliente() as logical
+
+    @put(endpoint='/clientes/atualizar',;
+         description="Método para atualizar um cliente")
+    public method atualiza_cliente() as logical
+
+    @delete(endpoint="/clientes/deletar",;
+         description="Método para deletar um cliente")
+    public method deletar_cliente() as logical
+
+    @post(endpoint="/clientes/incluir",;
+         description="Método para incluir um cliente")
+    public method inclui_cliente() as logical
+
+End Class
+
+//Método New
+Method new() Class TAB_CLIENTES
+Return self
+
+Method listar_clientes() class TAB_CLIENTES
+	Local lRPC			as logical
+	Local nError        as numeric
+	Local cError        as character
+	Local jResult    	as json  
+    Local jHeaderReq    as json
+    Local jQueryPar     as json
+    Local oQuery        as object
+
+    Local cQuery        as character
+    Local cWhere        as character
+    Local cOrder        as character
+    Local cTabela       as character
+
+    cTabela := "SA1" //Cadastro de Clientes
+ 
+	If Type('cEmpAnt') <> 'C'
+		RpcSetEnv('99','01')
+		lRPC := .T.
+	EndIf
+
+	Try
+		jHeaderReq := oRest:getHeaderRequest()
+          jQueryPar  := oRest:getQueryRequest()
+
+          jHeaderRes := jsonObject():new()
+          jHeaderRes['Content-Type'] := 'application/json'
+
+          oQuery := fwAdapterBaseV2():new('GET',.t.)
+
+          cQuery += "SELECT #QueryFields# FROM ("
+          cQuery += CRLF +" SELECT * FROM " +RetSQLName(cTabela) +" "+cTabela+") "+cTabela
+          cQuery += CRLF +" WHERE #QueryWhere# "
+
+          cWhere += "D_E_L_E_T_ = ' '"
+
+          cOrder += 'A1_COD,A1_LOJA'
+
+          oQuery:AddMapFields('codigo','A1_COD',.T.,.T.)
+          oQuery:AddMapFields('loja','A1_LOJA',.T.,.T.)
+          oQuery:AddMapFields('razao','A1_NOME',.T.,.T.)
+          oQuery:AddMapFields('tipo','A1_PESSOA',.T.,.T.)
+          oQuery:AddMapFields('endereco','A1_END',.T.,.T.)
+          oQuery:AddMapFields('bairro','A1_BAIRRO',.T.,.T.)
+          oQuery:AddMapFields('cidade','A1_MUN',.T.,.T.)
+          oQuery:AddMapFields('estado','A1_EST',.T.,.T.)
+          oQuery:AddMapFields('cep','A1_CEP',.T.,.T.)
+
+          oQuery:setQuery(cQuery)
+          oQuery:setWhere(cWhere)
+          oQuery:setOrder(cOrder)
+ 
+		If oQuery:execute()
+			oQuery:fillGetResponse()
+			oRest:setResponse(oQuery:getJsonResponse())
+ 
+		Else
+ 
+			nError := ::getCode()
+			cError := ::getMessage()
+ 
+			jResult := jsonObject():new()
+			jResult['error'] := cError
+ 
+			oRest:setFault(jResult:toJson())
+ 
+		EndIf
+ 
+	Catch err
+ 
+		cError            := err:errorstack
+		//cError            := err:description
+ 
+		jResult           := jsonObject():new()
+		jResult['error']  := cError
+ 
+		oRest:setFault(jResult:toJson())
+ 
+	EndTry
+	If lRPC
+		RpcClearEnv()
+	EndIf
+ 
+Return .T.

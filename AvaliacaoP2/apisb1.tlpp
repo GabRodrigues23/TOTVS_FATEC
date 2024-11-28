@@ -1,0 +1,190 @@
+#include 'totvs.ch'
+#include 'tlpp-core.th'
+  
+Class FATECPRODUTOS
+    public method new() constructor
+    
+    @get(endpoint='/fatec/prova2/produto', description='Metodo exemplo para listagem de Produtos')
+    public method listar_produtos() as logical
+    // URL: http://localhost:8091/restapi/fatec/prova2/produto 
+
+    @get(endpoint='/fatec/prova2/produto/:codigo', description='Método para trazer as informações de um produto')
+    public method detalhes_produto() as logical
+    // URL: http://localhost:8091/restapi/fatec/prova2/produto/CURSO_ADS
+
+End Class
+
+//Método New
+Method new() Class FATECPRODUTOS ;Return self
+
+//Método
+Method listar_produtos() Class FATECPRODUTOS
+    Local lRPC          as logical
+    Local cErrorStack   as character
+    Local cErrorDescr   as character
+    Local err           as object
+    Local jResp         as json
+    Local jProduto      as json
+
+    If Type('cEmpAnt') <> 'C'
+        RpcSetEnv('99','01')
+        lRPC            := .T.
+    EndIf
+
+    try
+        dbSelectArea("SB1")
+        // SELECT * FROM SIX990 WHERE INDICE = 'SB1'
+        dbSetOrder(1) //B1_FILIAL+B1_COD
+        dbGoTop()
+
+        jResp           := jsonObject():new()
+        jResp['SB1']    := array(0)
+
+        While .not. EoF()
+
+            jProduto                  := jsonObject():new()
+            jProduto['codigo'       ] := SB1->B1_COD
+            jProduto['nome'         ] := AllTrim(B1_DESC)
+            jProduto['tipo'         ] := B1_TIPO
+            jProduto['data_registro'] := DToC(B1_DATREF)
+
+            AAdd(jResp['SB1'],jProduto)
+
+            DbSkip()
+
+        EndDo
+
+        oRest:setResponse(jResp:toJson())
+
+    catch err
+
+        cErrorStack     := err:errorstack
+        cErrorDescr     := err:description
+
+    endtry   
+
+    If lRPC
+        RpcClearEnv()
+    EndIf     
+
+Return .T.
+
+//Método
+Method detalhes_produto() Class FATECPRODUTOS
+    Local lRPC          as logical
+    Local jPathParm     as json
+    Local jResp         as json
+    Local cCodigo       as character
+    Local B1_DESC       as character
+    Local B1_TIPO       as integer
+    Local B1_DATAREF    as date
+    Local B1_LOCPAD     as character
+    Local B1_MRP        as character
+    Local B1_RASTRO     as character
+    Local B1_UM         as character
+    Local B1_CONV       as character
+    Local B1_TIPCONV    as character
+    Local B1_SEGUM      as character
+    Local B1_UREV       as character
+    Local cRa           as character
+    Local nValor2UM     as numeric
+    Local cUltimaRev    as character
+    Local aMeses        as array
+    aMeses := { "janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro" }
+    Local nDia as numeric
+    Local nMes as numeric
+    Local nAno as numeric
+    
+    If Type('cEmpAnt') <> 'C'
+        RpcSetEnv('99','01')
+        lRPC := .T.
+    EndIf 
+
+    jPathParm := oRest:getPathParamsRequest()
+    jResp     := jsonObject():new()
+
+    cCodigo   := jPathParm['codigo']
+
+    DbSelectArea("SB1")
+    DbSetOrder(1)
+    MsSeek(FWxFilial(Alias())+AllTrim(cCodigo))
+
+    If .not. Found()
+        
+        jResp['erro']   := 'Produto «'+ AllTrim(cCodigo) +'» nao encontrado!'
+        
+        oRest:setStatusCode(400)
+        oRest:setResponse(jResp:toJson())
+
+        Return .T.
+        
+    EndIf
+
+    try
+        // Retorno dos detalhes do Produto
+        cRA := '1310482223044'
+        jResp['ra'        ] := AllTrim(cRA)
+        jResp['codigo'       ] := SB1->B1_COD
+        jResp['descricao' ] := AllTrim(B1_DESC)
+        jResp['tipo'      ] := B1_TIPO
+        jResp['data_ref'  ] := DToC(B1_DATREF)
+        jResp['armazem'   ] := AllTrim(B1_LOCPAD)
+        jResp['entra_mrp' ] := B1_MRP
+        
+        If B1_MRP == 'S'
+            jResp['MRP'] := 'calcular'
+        ElseIf B1_MRP == 'N'
+            jResp['MRP'] := 'ignorar'
+        EndIf
+
+        jResp['rastreabilidade'] := B1_RASTRO
+        
+        If B1_RASTRO == 'S'
+            jResp['rastreabilidade'] := 'ativada'  
+        ElseIf B1_RASTRO == 'N'
+            jResp['rastreabilidade'] := 'desativada'
+        EndIf
+        
+        jResp['unidade_medida'] := AllTrim(B1_UM)
+        jResp['tipo_conv'] := AllTrim(B1_TIPCONV)
+        jResp['segunda_um'] := AllTrim(B1_SEGUM) 
+        
+        If B1_TIPCONV == 'M'
+            nValor2UM := 100 * Val(B1_CONV)
+        ElseIf B1_TIPCONV == 'D'
+            If Val(B1_CONV) != 0
+                nValor2UM := 100 / Val(B1_CONV)
+            Else
+                nValor2UM := 0
+            EndIf
+        EndIf
+
+        jResp['valor2UM'] := nValor2UM
+        jResp['ultima_revisao'] := DToC(B1_UREV)  
+        
+        If !Empty(B1_UREV)
+            nDia  := Day(B1_UREV)
+            nMes  := Month(B1_UREV)
+            nAno  := Year(B1_UREV)
+            
+            cUltimaRev := Str(nDia, 2) + " de " + aMeses[nMes] + " de " + Str(nAno, 4)
+            jResp['ultimarevisao'] := "Última revisão realizada em " + cUltimaRev        
+        EndIf
+
+
+    catch err
+        
+        jResp['erro'] := err:errorstack
+                                   
+        oRest:setFault(jResp:toJson())
+        Return .T.
+
+    endtry
+
+    oRest:setResponse(jResp:toJson())
+
+    If lRPC
+        RpcClearEnv()
+    EndIf
+
+Return .T.

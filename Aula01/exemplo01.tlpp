@@ -1,0 +1,45 @@
+#include 'totvs.ch'
+#include 'tlpp-core.th'
+Function U_EXEMPLO01(xpar as variadic) as logical
+    Local nome := 'Fatec - ADS' as character
+    Local dataAtual as date
+    Local lRet as logical
+    Local iInt1 as integer
+    Local eDbl1 as double
+    Local fDec1 as decimal
+    Local aArr1 as array
+    Local oObj1 as object
+    Local jJsn1 as json
+    Local bBlk1 as codeblock
+    Local xVar1 as variant
+
+    private cNome as character
+    
+
+    nNum1 := 10
+    nNum2 := 12
+
+    nNum3 := nNum1 + nNum2
+    //Alert(nNum3)
+
+    fwAlertInfo(cValToChar(nNum3))
+    
+    dataAtual := cTOD('21/08/2024')
+
+Return lRet
+
+/* 
+variavel Public : CPAISLOC
+var nativa do Protheus
+
+
+bBlk1 : codeblock -> {|| Alert(" ")}
+
+
+necessário importar os includes ao criar o servidor
+
+monitor gerencia os acessos ao servidor // Erro de acesso exclusivo -> Alguma instância deve estar rodando no Monitor
+
+ctrl + f9 : compilar
+f5 : debugar
+*/

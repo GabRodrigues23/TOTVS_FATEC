@@ -1,0 +1,10 @@
+{
+    "totvsLanguageServer.welcomePage": false,
+    "advpl.projectActive": "__WorkSpace2310",
+    "totvsLanguageServer.editor.linter.includes": "C:\\Totvs\\TOTVS_P1212310\\Protheus\\include",
+    "debug.allowBreakpointsEverywhere": false,
+    "debug.autoExpandLazyVariables": true,
+    "debug.console.acceptSuggestionOnEnter": "off",
+    "debug.hideLauncherWhileDebugging": false,
+    "debug.showSubSessionsInToolBar": false
+}
